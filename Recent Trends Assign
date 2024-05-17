@@ -1,0 +1,180 @@
+package lukeass;
+
+import java.util.ArrayList;
+
+public class BreadthFirstSearchLevels {
+
+    public ArrayList<int[][]> bfsLevelsAllState(int[][] state) {
+        ArrayList<int[][]> allState = new ArrayList<>();
+        ArrayList<int[][]> currentList = new ArrayList<>();
+        ArrayList<int[][]> previousList = new ArrayList<>();
+        ArrayList<int[][]> futureList = new ArrayList<>();
+        futureList.add(state);
+        ArrayList<int[][]> children;
+        PuzzleMethod pm = new PuzzleMethod();
+        int level = -1;
+
+        while (!futureList.isEmpty()) {
+            level++;
+            for (int[][] previousState : previousList) {
+                allState.add(previousState);
+            }
+            previousList = new ArrayList<>(currentList);
+            currentList = new ArrayList<>(futureList);
+            futureList.clear();
+
+            for (int[][] currentState : currentList) {
+                children = pm.getSuccessors(currentState);
+                for (int[][] child : children) {
+                    if (!checkStateFoundList(futureList, child) && !checkStateFoundList(previousList, child)) {
+                        futureList.add(child);
+                    }
+                }
+            }
+            System.out.println(" current level is " + level);
+        }
+
+        allState.addAll(previousList);
+        allState.addAll(currentList);
+
+        return allState;
+    }
+
+    public boolean checkStateFoundList(ArrayList<int[][]> list, int[][] state) {
+        for (int[][] item : list) {
+            if (compareTwoState(state, item) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int compareTwoState(int[][] state1, int[][] state2) {
+        for (int i = 0; i < state1.length; i++) {
+            for (int j = 0; j < state1[0].length; j++) {
+                if (state1[i][j] > state2[i][j]) {
+                    return 1;
+                } else if (state1[i][j] < state2[i][j]) {
+                    return -1;
+                }
+            }
+        }
+        return 0;
+    }
+
+    public void mergeSort(ArrayList<int[][]> list, int left, int right) {
+        if (left < right) {
+            int mid = left + (right - left) / 2;
+            mergeSort(list, left, mid);
+            mergeSort(list, mid + 1, right);
+            merge(list, left, mid, right);
+        }
+    }
+
+    public void merge(ArrayList<int[][]> list, int left, int mid, int right) {
+        int n1 = mid - left + 1;
+        int n2 = right - mid;
+
+        ArrayList<int[][]> leftList = new ArrayList<>(n1);
+        ArrayList<int[][]> rightList = new ArrayList<>(n2);
+
+        for (int i = 0; i < n1; i++) {
+            leftList.add(list.get(left + i));
+        }
+        for (int i = 0; i < n2; i++) {
+            rightList.add(list.get(mid + 1 + i));
+        }
+
+        int i = 0, j = 0;
+        int k = left;
+        while (i < n1 && j < n2) {
+            if (compareTwoState(leftList.get(i), rightList.get(j)) <= 0) {
+                list.set(k, leftList.get(i));
+                i++;
+            } else {
+                list.set(k, rightList.get(j));
+                j++;
+            }
+            k++;
+        }
+
+        while (i < n1) {
+            list.set(k, leftList.get(i));
+            i++;
+            k++;
+        }
+
+        while (j < n2) {
+            list.set(k, rightList.get(j));
+            j++;
+            k++;
+        }
+    }
+
+    public static void main(String[] args) {
+        int[][] initialState = {
+            {1, 2, 3},
+            {4, 5, 6},
+            {7, 8, 0}
+        };
+
+        BreadthFirstSearchLevels bfs = new BreadthFirstSearchLevels();
+        ArrayList<int[][]> allStates = bfs.bfsLevelsAllState(initialState);
+        bfs.mergeSort(allStates, 0, allStates.size() - 1);
+
+        // Print all states after sorting
+        for (int[][] state : allStates) {
+            for (int[] row : state) {
+                for (int num : row) {
+                    System.out.print(num + " ");
+                }
+                System.out.println();
+            }
+            System.out.println("-----");
+        }
+    }
+}
+package lukeass;
+
+import java.util.ArrayList;
+
+public class PuzzleMethod {
+    public ArrayList<int[][]> getSuccessors(int[][] state) {
+        ArrayList<int[][]> successors = new ArrayList<>();
+        int row = 0, col = 0;
+
+        // Find the empty tile (0)
+        outerLoop:
+        for (int i = 0; i < state.length; i++) {
+            for (int j = 0; j < state[0].length; j++) {
+                if (state[i][j] == 0) {
+                    row = i;
+                    col = j;
+                    break outerLoop;
+                }
+            }
+        }
+
+        // Possible directions: up, down, left, right
+        int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        for (int[] dir : directions) {
+            int newRow = row + dir[0];
+            int newCol = col + dir[1];
+
+            if (newRow >= 0 && newRow < 3 && newCol >= 0 && newCol < 3) {
+                int[][] newState = new int[3][3];
+                for (int i = 0; i < 3; i++) {
+                    for (int j = 0; j < 3; j++) {
+                        newState[i][j] = state[i][j];
+                    }
+                }
+                // Swap the empty tile with the adjacent tile
+                newState[row][col] = newState[newRow][newCol];
+                newState[newRow][newCol] = 0;
+                successors.add(newState);
+            }
+        }
+        return successors;
+    }
+}
+
